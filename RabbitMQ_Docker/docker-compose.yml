@@ -1,0 +1,85 @@
+version: "3.9"
+
+services:
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    networks:
+      - pizza_net
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  frame_reader:
+    image: python:3.10-slim
+    container_name: frame_reader
+    working_dir: /app
+    volumes:
+      - ./RabbitMQ_nodocker/readframes:/app
+      - ./RabbitMQ_nodocker/models:/models
+      - ./RabbitMQ_nodocker/dataset:/dataset
+      - ./requirements.txt:/requirements.txt
+    command: >
+      sh -c "
+      pip install --no-cache-dir -r /requirements.txt &&
+      python collect_read_frame.py
+      "
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - pizza_net
+
+  detection_service:
+    image: python:3.10-slim
+    container_name: detection_service
+    working_dir: /app
+    volumes:
+      - ./RabbitMQ_nodocker/DetectionAndViolation:/app
+      - ./RabbitMQ_nodocker/models:/models
+      - ./RabbitMQ_nodocker/dataset:/dataset
+      - ./requirements.txt:/requirements.txt
+    command: >
+      sh -c "
+      pip install --no-cache-dir -r /requirements.txt &&
+      python collect_detect_violation.py
+      "
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - pizza_net
+
+  streaming_service:
+    image: python:3.10-slim
+    container_name: streaming_service
+    working_dir: /app
+    volumes:
+      - ./RabbitMQ_nodocker/Streaming:/app
+      - ./RabbitMQ_nodocker/models:/models
+      - ./requirements.txt:/requirements.txt
+    ports:
+      - "5000:5000"
+    command: >
+      sh -c "
+      pip install --no-cache-dir -r /requirements.txt &&
+      python stream_serv.py
+      "
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - pizza_net
+
+networks:
+  pizza_net:
+    driver: bridge
