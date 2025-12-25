@@ -129,6 +129,7 @@ Same logic, same queues.
 ```bash
 docker compose up
 ```
+![rabbitmq_architecture](https://github.com/user-attachments/assets/ad3be749-6f23-4b39-96e1-f4028b2c5e9f)
 
 ### 🔵 3. Kafka Architecture (Without Docker)
 
@@ -189,6 +190,9 @@ docker compose up
 
 **Access:**
 `http://localhost:5000`
+
+![Kafka_Docker_diagram](https://github.com/user-attachments/assets/6f923a73-9971-4486-94bb-c8447b6d3ced)
+
 
 ## 🗃 Violation Logging (SQLite)
 
